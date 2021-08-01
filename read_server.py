@@ -8,7 +8,7 @@ from pathlib import Path
 def parse_arguments():
     """Функция обработки аргументов командной строки."""
     parser = configargparse.ArgParser(
-        default_config_files=['config.conf',],
+        default_config_files=['read_config.conf',],
         description='Async app to read tcp chat.',
     )
     parser.add(
@@ -43,6 +43,7 @@ async def tcp_read_chat(backup_file_name: str, host: str, port: str):
         while not reader.at_eof():
             data = await reader.readuntil(separator=b'\n')
             date_string = datetime.datetime.now().strftime("%d.%m.%y %H:%M")
+            print(data.decode())
             await backup_file.write(f'[{date_string}] {data.decode()}')
             await asyncio.sleep(1)
 
