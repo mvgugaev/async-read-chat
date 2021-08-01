@@ -38,6 +38,13 @@ def parse_arguments():
     return parser.parse_args()
 
 
+async def close_connection(writer):
+    """Закрытие соединения с сокетом."""
+    logger.debug('Close the connection')
+    writer.close()
+    await writer.wait_closed()
+    
+
 async def tcp_read_chat(backup_file_name: str, host: str, port: str):
     """Асинхронная функция для чтения чата с удаленного сервера."""
     reader, writer = await asyncio.open_connection(host, port)
@@ -50,8 +57,7 @@ async def tcp_read_chat(backup_file_name: str, host: str, port: str):
             await backup_file.write(f'[{date_string}] {data.decode()}')
             await asyncio.sleep(1)
 
-    logger.debug('Close the connection')
-    writer.close()
+    await close_connection(writer)
 
 
 def main():

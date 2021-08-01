@@ -1,3 +1,4 @@
+import json
 import logging
 import asyncio
 import configargparse
@@ -41,27 +42,40 @@ async def write_to_socket(writer, data:str):
     logger.debug(data.rstrip())
     await writer.drain()
 
-async def read_and_print_from_socket(reader):
+
+async def read_and_print_from_socket(reader, check_token: bool=False):
     """Метод для чтения и вывода строки из сокета."""
-    data = await reader.readline()
-    logger.debug(data.decode().rstrip())
+    data = (await reader.readline()).decode().rstrip()
+    logger.debug(data)
+    return data
+
+
+async def close_connection(writer):
+    """Закрытие соединения с сокетом."""
+    logger.debug('Close the connection')
+    writer.close()
+    await writer.wait_closed()
+
 
 async def tcp_write_chat(host: str, port: str, hash: str):
     """Асинхронная функция для записи в чат."""
     reader, writer = await asyncio.open_connection(host, port)
     await read_and_print_from_socket(reader)
     await write_to_socket(writer, f'{hash}\n')
-    await read_and_print_from_socket(reader)
+    data = await read_and_print_from_socket(reader)
+
+    if json.loads(data) is None:
+        await close_connection(writer)
+        logger.debug('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
+        return
+
     await read_and_print_from_socket(reader)
     await write_to_socket(
         writer,
         'Я снова тестирую чатик. Это третье сообщение.\n\n',
     )
     await read_and_print_from_socket(reader)
-
-    logger.debug('Close the connection')
-    writer.close()
-    await writer.wait_closed()
+    await close_connection(writer)
 
 
 def main():
