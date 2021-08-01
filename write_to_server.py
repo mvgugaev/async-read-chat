@@ -1,6 +1,9 @@
+import logging
 import asyncio
 import configargparse
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('sender')
 
 def parse_arguments():
     """Функция обработки аргументов командной строки."""
@@ -35,12 +38,13 @@ def parse_arguments():
 async def write_to_socket(writer, data:str):
     """Метод для отправки текста в сокет."""
     writer.write(data.encode())
+    logger.debug(data.rstrip())
     await writer.drain()
 
 async def read_and_print_from_socket(reader):
     """Метод для чтения и вывода строки из сокета."""
     data = await reader.readline()
-    print(data.decode())
+    logger.debug(data.decode().rstrip())
 
 async def tcp_write_chat(host: str, port: str, hash: str):
     """Асинхронная функция для записи в чат."""
@@ -55,7 +59,7 @@ async def tcp_write_chat(host: str, port: str, hash: str):
     )
     await read_and_print_from_socket(reader)
 
-    print('Close the connection')
+    logger.debug('Close the connection')
     writer.close()
     await writer.wait_closed()
 

@@ -1,9 +1,12 @@
 import datetime
+import logging
 import asyncio
 import aiofiles
 import configargparse
 from pathlib import Path
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('reader')
 
 def parse_arguments():
     """Функция обработки аргументов командной строки."""
@@ -43,11 +46,11 @@ async def tcp_read_chat(backup_file_name: str, host: str, port: str):
         while not reader.at_eof():
             data = await reader.readuntil(separator=b'\n')
             date_string = datetime.datetime.now().strftime("%d.%m.%y %H:%M")
-            print(data.decode())
+            logger.debug(f'{data.decode().rstrip()}')
             await backup_file.write(f'[{date_string}] {data.decode()}')
             await asyncio.sleep(1)
 
-    print('Close the connection')
+    logger.debug('Close the connection')
     writer.close()
 
 
