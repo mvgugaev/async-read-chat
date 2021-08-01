@@ -1,17 +1,45 @@
 import datetime
 import asyncio
 import aiofiles
+import configargparse
+from pathlib import Path
 
-BACKUP_FILE_NAME = 'messages.txt'
-SERVER_ADDRESS = 'minechat.dvmn.org'
-SERVER_PORT = 5000
 
-async def tcp_read_chat(backup_file_name: str, server_address: str, server_port: str):
+def parse_arguments():
+    """Функция обработки аргументов командной строки."""
+    parser = configargparse.ArgParser(
+        default_config_files=['config.conf',],
+        description='Async app to read tcp chat.',
+    )
+    parser.add(
+        '-ho', 
+        '--host', 
+        help='Server HOST',
+        is_config_file=True,
+        required=True,
+    )
+    parser.add(
+        '-p', 
+        '--port', 
+        help='Server PORT',
+        is_config_file=True,
+        required=True,
+    )
+    parser.add(
+        '-hi', 
+        '--history', 
+        help='File to store messages',
+        is_config_file=True,
+        required=True,
+    )
+    return parser.parse_args()
+
+
+async def tcp_read_chat(backup_file_name: str, host: str, port: str):
     """Асинхронная функция для чтения чата с удаленного сервера."""
-    reader, writer = await asyncio.open_connection(
-        server_address, server_port)
+    reader, writer = await asyncio.open_connection(host, port)
 
-    async with aiofiles.open(backup_file_name, mode='a') as backup_file:
+    async with aiofiles.open(Path(backup_file_name), mode='a') as backup_file:
         while not reader.at_eof():
             data = await reader.readuntil(separator=b'\n')
             date_string = datetime.datetime.now().strftime("%d.%m.%y %H:%M")
@@ -24,10 +52,11 @@ async def tcp_read_chat(backup_file_name: str, server_address: str, server_port:
 
 def main():
     """Основная логика приложения."""
+    args = parse_arguments()
     asyncio.run(tcp_read_chat(
-        BACKUP_FILE_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT,
+        args.history,
+        args.host,
+        args.port,
     ))
 
 if __name__ == '__main__':
