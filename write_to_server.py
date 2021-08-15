@@ -15,11 +15,8 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('sender')
 
 
-async def tcp_write_chat(host: str, port: str, token_file: str):
-    """Асинхронная функция для записи в чат."""
-    reader, writer = await asyncio.open_connection(host, port)
-    await read_and_print_from_socket(reader, logger)
-
+async def authorise(reader, writer, token_file: str, logger):
+    """Асинхронная функция для авторизации в чате."""
     hash = ''
     async with aiofiles.open(token_file, mode='r') as token_file:
         hash = await token_file.read()
@@ -28,17 +25,37 @@ async def tcp_write_chat(host: str, port: str, token_file: str):
     data = await read_and_print_from_socket(reader, logger)
 
     if not get_json(data):
-        await close_connection(writer, logger)
         logger.debug('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
-        return
-
+        return False
+    
     await read_and_print_from_socket(reader, logger)
+    return True
+
+async def submit_message(reader, writer, message:str, logger):
+    """Асинхронная функция для отправки сообщения в чат."""
     await write_to_socket(
         writer,
-        'Я снова тестирую чатик. Это третье сообщение.\n\n',
+        f'{message}\n\n',
         logger,
     )
     await read_and_print_from_socket(reader, logger)
+
+async def tcp_write_chat(host: str, port: str, token_file: str):
+    """Асинхронная функция для записи в чат."""
+    reader, writer = await asyncio.open_connection(host, port)
+    await read_and_print_from_socket(reader, logger)
+
+    is_authorised = await authorise(reader, writer, token_file, logger)
+
+    if not is_authorised:
+        await close_connection(writer, logger)
+
+    await submit_message(
+        reader, 
+        writer,
+        'Я снова тестирую чатик. Это третье сообщение.',
+        logger,
+    )
     await close_connection(writer, logger)
 
 

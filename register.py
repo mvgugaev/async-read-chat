@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('sender')
 
 
-async def tcp_register_in_chat(host: str, port: str, token_file: str):
+async def register(host: str, port: str, token_file: str):
     """Асинхронная функция для регистрации в чате."""
     reader, writer = await asyncio.open_connection(host, port)
     await read_and_print_from_socket(reader, logger)
@@ -39,7 +39,7 @@ def main():
         'Async app to register in chat.',
         'write_config.conf',
     )
-    asyncio.run(tcp_register_in_chat(
+    asyncio.run(register(
         args.host,
         args.port,
         TOKEN_FILE,
