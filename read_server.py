@@ -2,48 +2,16 @@ import datetime
 import logging
 import asyncio
 import aiofiles
-import configargparse
 from pathlib import Path
+from utils import (
+    close_connection, 
+    read_and_print_from_socket,
+    parse_arguments,
+)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('reader')
 
-def parse_arguments():
-    """Функция обработки аргументов командной строки."""
-    parser = configargparse.ArgParser(
-        default_config_files=['read_config.conf',],
-        description='Async app to read tcp chat.',
-    )
-    parser.add(
-        '-ho', 
-        '--host', 
-        help='Server HOST',
-        is_config_file=True,
-        required=True,
-    )
-    parser.add(
-        '-p', 
-        '--port', 
-        help='Server PORT',
-        is_config_file=True,
-        required=True,
-    )
-    parser.add(
-        '-hi', 
-        '--history', 
-        help='File to store messages',
-        is_config_file=True,
-        required=True,
-    )
-    return parser.parse_args()
-
-
-async def close_connection(writer):
-    """Закрытие соединения с сокетом."""
-    logger.debug('Close the connection')
-    writer.close()
-    await writer.wait_closed()
-    
 
 async def tcp_read_chat(backup_file_name: str, host: str, port: str):
     """Асинхронная функция для чтения чата с удаленного сервера."""
@@ -51,18 +19,21 @@ async def tcp_read_chat(backup_file_name: str, host: str, port: str):
 
     async with aiofiles.open(Path(backup_file_name), mode='a') as backup_file:
         while not reader.at_eof():
-            data = await reader.readuntil(separator=b'\n')
+            data = await read_and_print_from_socket(reader, logger)
             date_string = datetime.datetime.now().strftime("%d.%m.%y %H:%M")
-            logger.debug(f'{data.decode().rstrip()}')
-            await backup_file.write(f'[{date_string}] {data.decode()}')
+            await backup_file.write(f'[{date_string}] {data}')
             await asyncio.sleep(1)
 
-    await close_connection(writer)
+    await close_connection(writer, logger)
 
 
 def main():
     """Основная логика приложения."""
-    args = parse_arguments()
+    args = parse_arguments(
+        'Async app to read tcp chat.',
+        'read_config.conf',
+        history_argument=True,
+    )
     asyncio.run(tcp_read_chat(
         args.history,
         args.host,
