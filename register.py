@@ -22,7 +22,11 @@ async def register(host: str, port: str, token_file: str):
     await write_to_socket(writer, '\n', logger)
     await read_and_print_from_socket(reader, logger)
     name = input("Имя пользователя:")
-    await write_to_socket(writer, f'{name}\n', logger)
+    await write_to_socket(
+        writer, 
+        '{}\n'.format(name.replace("\n", "\\n")), 
+        logger,
+    )
 
     data = await read_and_print_from_socket(reader, logger)
     hash = get_json(data)['account_hash']

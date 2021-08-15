@@ -35,7 +35,7 @@ async def submit_message(reader, writer, message:str, logger):
     """Асинхронная функция для отправки сообщения в чат."""
     await write_to_socket(
         writer,
-        f'{message}\n\n',
+        '{}\n\n'.format(message.replace("\n", "\\n")),
         logger,
     )
     await read_and_print_from_socket(reader, logger)
@@ -53,7 +53,7 @@ async def tcp_write_chat(host: str, port: str, token_file: str):
     await submit_message(
         reader, 
         writer,
-        'Я снова тестирую чатик. Это третье сообщение.',
+        'Я снова тестирую чатик. \nЭто третье сообщение.',
         logger,
     )
     await close_connection(writer, logger)
