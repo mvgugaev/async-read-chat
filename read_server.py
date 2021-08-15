@@ -6,11 +6,35 @@ from pathlib import Path
 from utils import (
     close_connection, 
     read_and_print_from_socket,
-    parse_arguments,
+    get_parser,
 )
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('reader')
+
+
+def parse_arguments():
+    """Функция обработки аргументов командной строки."""
+    parser = get_parser(
+        'Async app to read tcp chat.',
+        'read_config.conf',
+    )
+    parser.add_arg(
+        '-ho', 
+        '--host', 
+        help='Server HOST',
+    )
+    parser.add_arg(
+        '-p',
+        '--port', 
+        help='Server PORT',
+    )
+    parser.add_arg(
+        '-hi', 
+        '--history', 
+        help='File to store messages',
+    )
+    return parser.parse_args()
 
 
 async def tcp_read_chat(backup_file_name: str, host: str, port: str):
@@ -29,11 +53,7 @@ async def tcp_read_chat(backup_file_name: str, host: str, port: str):
 
 def main():
     """Основная логика приложения."""
-    args = parse_arguments(
-        'Async app to read tcp chat.',
-        'read_config.conf',
-        history_argument=True,
-    )
+    args = parse_arguments()
     asyncio.run(tcp_read_chat(
         args.history,
         args.host,

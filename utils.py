@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import configargparse
 
 def get_json(data: str):
@@ -30,32 +31,11 @@ async def close_connection(writer, logger):
     await writer.wait_closed()
 
 
-def parse_arguments(description: str, config_file: str, history_argument: bool = False):
-    """Функция обработки аргументов командной строки."""
-    parser = configargparse.ArgParser(
-        default_config_files=[config_file,],
+def get_parser(description: str, config_file: str):
+    """Функция для генерации парсера аргументов командной строки."""
+    return configargparse.ArgParser(
+        default_config_files=[
+            str(Path.cwd() / 'configs' / config_file),
+        ],
         description=description,
     )
-    parser.add(
-        '-ho', 
-        '--host', 
-        help='Server HOST',
-        is_config_file=True,
-        required=True,
-    )
-    parser.add(
-        '-p', 
-        '--port', 
-        help='Server PORT',
-        is_config_file=True,
-        required=True,
-    )
-    if history_argument:
-        parser.add(
-            '-hi', 
-            '--history', 
-            help='File to store messages',
-            is_config_file=True,
-            required=True,
-        )
-    return parser.parse_args()

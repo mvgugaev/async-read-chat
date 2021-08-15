@@ -6,7 +6,7 @@ from utils import (
     write_to_socket, 
     read_and_print_from_socket,
     close_connection,
-    parse_arguments,
+    get_parser,
 )
 
 TOKEN_FILE = 'token.txt'
@@ -15,13 +15,45 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('sender')
 
 
-async def register(host: str, port: str, token_file: str):
+def parse_arguments():
+    """Функция обработки аргументов командной строки."""
+    parser = get_parser(
+        'Async app to register in chat.',
+        'write_config.conf',
+    )
+    parser.add_arg(
+        '-ho', 
+        '--host', 
+        help='Server HOST',
+    )
+    parser.add_arg(
+        '-p',
+        '--port', 
+        help='Server PORT',
+    )
+    parser.add_arg(
+        '-n',
+        '--name', 
+        help='User name',
+    )
+    parser.add_arg(
+        '-hi', 
+        '--history', 
+        help='File to store messages',
+    )
+    return parser.parse_args()
+
+
+async def register(host: str, port: str, name: str, token_file: str):
     """Асинхронная функция для регистрации в чате."""
     reader, writer = await asyncio.open_connection(host, port)
     await read_and_print_from_socket(reader, logger)
     await write_to_socket(writer, '\n', logger)
     await read_and_print_from_socket(reader, logger)
-    name = input("Имя пользователя:")
+
+    if not name:
+        name = input("Имя пользователя:")
+        
     await write_to_socket(
         writer, 
         '{}\n'.format(name.replace("\n", "\\n")), 
@@ -39,13 +71,11 @@ async def register(host: str, port: str, token_file: str):
 
 def main():
     """Основная логика приложения."""
-    args = parse_arguments(
-        'Async app to register in chat.',
-        'write_config.conf',
-    )
+    args = parse_arguments()
     asyncio.run(register(
         args.host,
         args.port,
+        args.name,
         TOKEN_FILE,
     ))
 
