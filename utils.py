@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import configargparse
 
-def get_json(data: str):
+def convert_string_to_json(data: str):
     """Конвертация строки в json"""
     try:
         return json.loads(data)

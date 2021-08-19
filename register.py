@@ -2,14 +2,14 @@ import logging
 import asyncio
 import aiofiles
 from utils import (
-    get_json, 
+    convert_string_to_json, 
     write_to_socket, 
     read_and_print_from_socket,
     close_connection,
     get_parser,
 )
 
-TOKEN_FILE = 'token.txt'
+TOKEN_FILE_NAME = 'token.txt'
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('sender')
@@ -44,7 +44,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-async def register(host: str, port: str, name: str, token_file: str):
+async def register(host: str, port: str, name: str, token_file_name: str):
     """Асинхронная функция для регистрации в чате."""
     reader, writer = await asyncio.open_connection(host, port)
     await read_and_print_from_socket(reader, logger)
@@ -61,9 +61,9 @@ async def register(host: str, port: str, name: str, token_file: str):
     )
 
     data = await read_and_print_from_socket(reader, logger)
-    hash = get_json(data)['account_hash']
+    hash = convert_string_to_json(data)['account_hash']
 
-    async with aiofiles.open(token_file, mode='w') as token_file:
+    async with aiofiles.open(token_file_name, mode='w') as token_file:
         await token_file.write(hash)
 
     await close_connection(writer, logger)
@@ -76,7 +76,7 @@ def main():
         args.host,
         args.port,
         args.name,
-        TOKEN_FILE,
+        TOKEN_FILE_NAME,
     ))
 
 

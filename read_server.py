@@ -37,15 +37,15 @@ def parse_arguments():
     return parser.parse_args()
 
 
-async def tcp_read_chat(backup_file_name: str, host: str, port: str):
+async def read_tcp_chat(history_file_name: str, host: str, port: str):
     """Асинхронная функция для чтения чата с удаленного сервера."""
     reader, writer = await asyncio.open_connection(host, port)
 
-    async with aiofiles.open(Path(backup_file_name), mode='a') as backup_file:
+    async with aiofiles.open(Path(history_file_name), mode='a') as history_file:
         while not reader.at_eof():
             data = await read_and_print_from_socket(reader, logger)
             date_string = datetime.datetime.now().strftime("%d.%m.%y %H:%M")
-            await backup_file.write(f'[{date_string}] {data}')
+            await history_file.write(f'[{date_string}] {data}')
             await asyncio.sleep(1)
 
     await close_connection(writer, logger)
@@ -54,7 +54,7 @@ async def tcp_read_chat(backup_file_name: str, host: str, port: str):
 def main():
     """Основная логика приложения."""
     args = parse_arguments()
-    asyncio.run(tcp_read_chat(
+    asyncio.run(read_tcp_chat(
         args.history,
         args.host,
         args.port,

@@ -2,7 +2,7 @@ import logging
 import asyncio
 import aiofiles
 from utils import (
-    get_json, 
+    convert_string_to_json, 
     write_to_socket, 
     read_and_print_from_socket,
     close_connection,
@@ -50,7 +50,7 @@ async def authorise(reader, writer, token: str, logger):
     await write_to_socket(writer, f'{token.rstrip()}\n', logger)
     data = await read_and_print_from_socket(reader, logger)
 
-    if not get_json(data):
+    if not convert_string_to_json(data):
         logger.debug('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
         return False
     
@@ -66,9 +66,8 @@ async def submit_message(reader, writer, message:str, logger):
     )
     await read_and_print_from_socket(reader, logger)
 
-async def tcp_write_chat(host: str, port: str, message: str, token: str, token_file: str):
+async def write_tcp_chat(host: str, port: str, message: str, token: str, token_file: str):
     """Асинхронная функция для записи в чат."""
-    print(token)
     reader, writer = await asyncio.open_connection(host, port)
     await read_and_print_from_socket(reader, logger)
 
@@ -94,7 +93,7 @@ async def tcp_write_chat(host: str, port: str, message: str, token: str, token_f
 def main():
     """Основная логика приложения."""
     args = parse_arguments()
-    asyncio.run(tcp_write_chat(
+    asyncio.run(write_tcp_chat(
         args.host,
         args.port,
         args.message,
