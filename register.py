@@ -60,8 +60,14 @@ async def register(host: str, port: str, name: str, token_file_name: str):
         logger,
     )
 
-    data = await read_and_print_from_socket(reader, logger)
-    hash = convert_string_to_json(data)['account_hash']
+    response = await read_and_print_from_socket(reader, logger)
+    convertation_status, json_response = convert_string_to_json(response)
+    if not convertation_status or not json_response:
+        logger.debug('Не удалось получить токен. Повторите попытку.')
+        await close_connection(writer, logger)
+        return False
+
+    hash = json_response['account_hash']
 
     async with aiofiles.open(token_file_name, mode='w') as token_file:
         await token_file.write(hash)

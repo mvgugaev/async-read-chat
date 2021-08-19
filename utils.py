@@ -2,12 +2,12 @@ import json
 from pathlib import Path
 import configargparse
 
-def convert_string_to_json(data: str):
-    """Конвертация строки в json"""
+def convert_string_to_json(data: str) -> tuple:
+    """Конвертация строки в json -> (status, result)"""
     try:
-        return json.loads(data)
+        return True, json.loads(data)
     except ValueError as e:
-        return False
+        return False, None
 
 
 async def write_to_socket(writer, data:str, logger):

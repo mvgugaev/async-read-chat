@@ -45,12 +45,12 @@ def parse_arguments():
     return parser.parse_args()
 
 
-async def authorise(reader, writer, token: str, logger):
+async def authorize(reader, writer, token: str, logger):
     """Асинхронная функция для авторизации в чате."""
     await write_to_socket(writer, f'{token.rstrip()}\n', logger)
-    data = await read_and_print_from_socket(reader, logger)
-
-    if not convert_string_to_json(data):
+    response = await read_and_print_from_socket(reader, logger)
+    convertation_status, json_response = convert_string_to_json(response)
+    if not convertation_status or not json_response:
         logger.debug('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
         return False
     
@@ -75,9 +75,9 @@ async def write_tcp_chat(host: str, port: str, message: str, token: str, token_f
         async with aiofiles.open(token_file, mode='r') as token_file:
             token = await token_file.read()
 
-    is_authorised = await authorise(reader, writer, token, logger)
+    is_authorized = await authorize(reader, writer, token, logger)
 
-    if not is_authorised:
+    if not is_authorized:
         await close_connection(writer, logger)
         return
 

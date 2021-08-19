@@ -20,6 +20,6 @@ python3 write_to_server.py -ho minechat.dvmn.org -p 5050 -m my_message
 
 ### Чтение сообщений
 ```
-python3 read_server.py -ho minechat.dvmn.org -p 5050 -hi minechat.history
+python3 read_server.py -ho minechat.dvmn.org -p 5000 -hi minechat.history
 ```
 Базовые настройки можно изменить в файле configs/read_config.conf
