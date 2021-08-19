@@ -4,7 +4,7 @@ import asyncio
 import aiofiles
 from pathlib import Path
 from utils import (
-    close_connection, 
+    open_connection, 
     read_and_print_from_socket,
     get_parser,
 )
@@ -39,16 +39,13 @@ def parse_arguments():
 
 async def read_tcp_chat(history_file_name: str, host: str, port: str):
     """Асинхронная функция для чтения чата с удаленного сервера."""
-    reader, writer = await asyncio.open_connection(host, port)
-
-    async with aiofiles.open(Path(history_file_name), mode='a') as history_file:
-        while not reader.at_eof():
-            data = await read_and_print_from_socket(reader, logger)
-            date_string = datetime.datetime.now().strftime("%d.%m.%y %H:%M")
-            await history_file.write(f'[{date_string}] {data}')
-            await asyncio.sleep(1)
-
-    await close_connection(writer, logger)
+    async with open_connection(host, port, logger) as (reader, _):
+        async with aiofiles.open(Path(history_file_name), mode='a') as history_file:
+            while not reader.at_eof():
+                data = await read_and_print_from_socket(reader, logger)
+                date_string = datetime.datetime.now().strftime("%d.%m.%y %H:%M")
+                await history_file.write(f'[{date_string}] {data}')
+                await asyncio.sleep(1)
 
 
 def main():

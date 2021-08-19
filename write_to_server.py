@@ -7,6 +7,7 @@ from utils import (
     read_and_print_from_socket,
     close_connection,
     get_parser,
+    open_connection,
 )
 
 TOKEN_FILE = 'token.txt'
@@ -68,26 +69,25 @@ async def submit_message(reader, writer, message:str, logger):
 
 async def write_tcp_chat(host: str, port: str, message: str, token: str, token_file: str):
     """Асинхронная функция для записи в чат."""
-    reader, writer = await asyncio.open_connection(host, port)
-    await read_and_print_from_socket(reader, logger)
+    async with open_connection(host, port, logger) as (reader, writer):
+        await read_and_print_from_socket(reader, logger)
 
-    if not token:
-        async with aiofiles.open(token_file, mode='r') as token_file:
-            token = await token_file.read()
+        if not token:
+            async with aiofiles.open(token_file, mode='r') as token_file:
+                token = await token_file.read()
 
-    is_authorized = await authorize(reader, writer, token, logger)
+        is_authorized = await authorize(reader, writer, token, logger)
 
-    if not is_authorized:
-        await close_connection(writer, logger)
-        return
+        if not is_authorized:
+            await close_connection(writer, logger)
+            return
 
-    await submit_message(
-        reader, 
-        writer,
-        message,
-        logger,
-    )
-    await close_connection(writer, logger)
+        await submit_message(
+            reader, 
+            writer,
+            message,
+            logger,
+        )
 
 
 def main():

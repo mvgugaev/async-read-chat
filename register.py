@@ -5,6 +5,7 @@ from utils import (
     convert_string_to_json, 
     write_to_socket, 
     read_and_print_from_socket,
+    open_connection,
     close_connection,
     get_parser,
 )
@@ -46,33 +47,31 @@ def parse_arguments():
 
 async def register(host: str, port: str, name: str, token_file_name: str):
     """Асинхронная функция для регистрации в чате."""
-    reader, writer = await asyncio.open_connection(host, port)
-    await read_and_print_from_socket(reader, logger)
-    await write_to_socket(writer, '\n', logger)
-    await read_and_print_from_socket(reader, logger)
+    async with open_connection(host, port, logger) as (reader, writer):
+        await read_and_print_from_socket(reader, logger)
+        await write_to_socket(writer, '\n', logger)
+        await read_and_print_from_socket(reader, logger)
 
-    if not name:
-        name = input("Имя пользователя:")
-        
-    await write_to_socket(
-        writer, 
-        '{}\n'.format(name.replace("\n", "\\n")), 
-        logger,
-    )
+        if not name:
+            name = input("Имя пользователя:")
+            
+        await write_to_socket(
+            writer, 
+            '{}\n'.format(name.replace("\n", "\\n")), 
+            logger,
+        )
 
-    response = await read_and_print_from_socket(reader, logger)
-    convertation_status, json_response = convert_string_to_json(response)
-    if not convertation_status or not json_response:
-        logger.debug('Не удалось получить токен. Повторите попытку.')
-        await close_connection(writer, logger)
-        return False
+        response = await read_and_print_from_socket(reader, logger)
+        convertation_status, json_response = convert_string_to_json(response)
+        if not convertation_status or not json_response:
+            logger.debug('Не удалось получить токен. Повторите попытку.')
+            await close_connection(writer, logger)
+            return False
 
-    hash = json_response['account_hash']
+        hash = json_response['account_hash']
 
-    async with aiofiles.open(token_file_name, mode='w') as token_file:
-        await token_file.write(hash)
-
-    await close_connection(writer, logger)
+        async with aiofiles.open(token_file_name, mode='w') as token_file:
+            await token_file.write(hash)
 
 
 def main():

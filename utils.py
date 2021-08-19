@@ -1,6 +1,9 @@
 import json
+import asyncio
 from pathlib import Path
 import configargparse
+from contextlib import asynccontextmanager
+
 
 def convert_string_to_json(data: str) -> tuple:
     """Конвертация строки в json -> (status, result)"""
@@ -39,3 +42,12 @@ def get_parser(description: str, config_file: str):
         ],
         description=description,
     )
+
+@asynccontextmanager
+async def open_connection(host: str, port: int, logger):
+    """Контекстный менеджер для открытия tcp соединения"""
+    reader, writer = await asyncio.open_connection(host, port)
+    try:
+        yield reader, writer
+    finally:
+        await close_connection(writer, logger)
