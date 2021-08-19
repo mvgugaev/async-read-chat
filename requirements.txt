@@ -1,1 +1,2 @@
 aiofiles==0.7.0
+ConfigArgParse==1.5.2
