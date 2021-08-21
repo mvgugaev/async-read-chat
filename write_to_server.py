@@ -2,7 +2,7 @@ import logging
 import asyncio
 import aiofiles
 from utils import (
-    convert_string_to_json, 
+    convert_json_string_to_object, 
     write_to_socket, 
     read_and_print_from_socket,
     close_connection,
@@ -50,8 +50,8 @@ async def authorize(reader, writer, token: str, logger):
     """Асинхронная функция для авторизации в чате."""
     await write_to_socket(writer, f'{token.rstrip()}\n', logger)
     response = await read_and_print_from_socket(reader, logger)
-    convertation_status, json_response = convert_string_to_json(response)
-    if not convertation_status or not json_response:
+    json_response = convert_json_string_to_object(response)
+    if not json_response:
         logger.debug('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
         return False
     

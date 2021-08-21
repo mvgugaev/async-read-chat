@@ -5,26 +5,26 @@ import configargparse
 from contextlib import asynccontextmanager
 
 
-def convert_string_to_json(data: str) -> tuple:
-    """Конвертация строки в json -> (status, result)"""
+def convert_json_string_to_object(json_string: str):
+    """Конвертация строки в json -> result (None в случае некорректной JSON строки)."""
     try:
-        return True, json.loads(data)
-    except ValueError as e:
-        return False, None
+        return json.loads(json_string)
+    except ValueError:
+        return None
 
 
-async def write_to_socket(writer, data:str, logger):
+async def write_to_socket(writer, message: str, logger):
     """Метод для отправки текста в сокет."""
-    writer.write(data.encode())
-    logger.debug(data.rstrip())
+    writer.write(message.encode())
+    logger.debug(message.rstrip())
     await writer.drain()
 
 
 async def read_and_print_from_socket(reader, logger):
     """Метод для чтения и вывода строки из сокета."""
-    data = (await reader.readline()).decode().rstrip()
-    logger.debug(data)
-    return data
+    string_from_chat = (await reader.readline()).decode().rstrip()
+    logger.debug(string_from_chat)
+    return string_from_chat
 
 
 async def close_connection(writer, logger):

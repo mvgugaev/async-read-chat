@@ -2,7 +2,7 @@ import logging
 import asyncio
 import aiofiles
 from utils import (
-    convert_string_to_json, 
+    convert_json_string_to_object, 
     write_to_socket, 
     read_and_print_from_socket,
     open_connection,
@@ -62,8 +62,8 @@ async def register(host: str, port: str, name: str, token_file_name: str):
         )
 
         response = await read_and_print_from_socket(reader, logger)
-        convertation_status, json_response = convert_string_to_json(response)
-        if not convertation_status or not json_response:
+        json_response = convert_json_string_to_object(response)
+        if not json_response:
             logger.debug('Не удалось получить токен. Повторите попытку.')
             await close_connection(writer, logger)
             return False
